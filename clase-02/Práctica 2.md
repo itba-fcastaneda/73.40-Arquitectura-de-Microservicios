@@ -14,7 +14,7 @@ Por otro lado, un **hipervisor** es una capa de software que se utiliza para cre
 Los hipervisores se clasifican en dos tipos:
 
 - Bare-metal: Se ejecutan directamente en la máquina física, sin necesidad de un sistema operativo host. Este tipo de hipervisor es más eficiente porque tiene acceso directo al hardware.
-- Hosted: Se ejecutan como una aplicación en un sistema operativo anfitrión. Este tipo de hipervisor es menos eficiente porque tiene que pasar por el sistema operativo host para acceder al hardware físico.
+- Hosted: Se ejecutan como una aplicación en un sistema operativo host. Este tipo de hipervisor es menos eficiente porque tiene que pasar por el sistema operativo host para acceder al hardware físico.
 
 En cuanto a los **contenedores**, podrían ser pensados como máquinas virtuales pero con la diferencia de que **comparte el mismo kernel** con el sistema operativo host y sus recursos, lo que los hace más livianos y rápidos. Además, los contenedores utilizan imágenes que contienen todo lo necesario para ejecutar una aplicación, lo que aumenta la **portabilidad y escalabilidad.** Los contenedores se ejecutan aislados del sistema operativo host y de otros contenedores.
 
@@ -75,7 +75,7 @@ docker exec -ti ams psql -U postgres
 postgres=# CREATE TABLE test(col_a VARCHAR,col_b VARCHAR,PRIMARY KEY(col_a));
 ```
 
-Aunque resulta conveniente para operaciones simples, si en el futuro necesitamos realizar consultas más complejas, esto podría complicarse. Por esta razón, nos gustaría tener acceso desde un cliente como PGAdmin o DataGrip. Para lograrlo, realizaremos un port forwarding desde la máquina virtual para exponer el puerto 5432, que es el predeterminado para cualquier base de datos PostgreSQL. Una vez realizado el forwarding intentaremos conectarnos desde nuestro cliente:
+Aunque resulta conveniente para operaciones simples, si en el futuro necesitamos realizar consultas más complejas, esto podría complicarse. Por esta razón, nos gustaría tener acceso desde un cliente como PGAdmin o DataGrip. Para lograrlo, realizaremos un port forwarding desde la máquina virtual para exponer el puerto 5432, que es el predeterminado para cualquier base de datos Postgres. Una vez realizado el forwarding intentaremos conectarnos desde nuestro cliente:
 
 ![Untitled](imgs/Untitled%202.png)
 
@@ -92,7 +92,9 @@ Optaremos por el camino 2. dado que recién comenzamos con la configuración del
 ```docker
 docker stop ams
 docker rm ams
-docker run --name ams -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres:14.1-alpine
+docker run --name ams -p 5432:5432 \
+           -e POSTGRES_PASSWORD=password \
+           -d postgres:14.1-alpine
 ```
 
 Estamos en condiciones ahora de volver a intentar probar con el cliente.
@@ -113,9 +115,13 @@ docker volume create ams-vol
 
 #Detenemos el contenedor y lo eliminamos como hicimos anteriormente.
 
-docker run --name ams -v ams-vol -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres:14.1-alpine
+docker run --name ams -v ams-vol \
+					 -p 5432:5432 \ 
+           -e POSTGRES_PASSWORD=password \
+           -d postgres:14.1-alpine
 
-#Debemos volver a crear la tabla como hicimos anteriormente o podrán hacerlo desde el cliente.
+#Debemos volver a crear la tabla como hicimos anteriormente o 
+#podrán hacerlo desde el cliente.
 ```
 
 Entonces si ahora eliminamos el contenedor nuevamente, la base de datos debería persistir, intentémoslo.
@@ -139,21 +145,23 @@ docker run --name ams -v ams-vol:/var/lib/postgresql/data \
            -d postgres:14.1-alpine
 ```
 
-Esto quiere decir que en el volumen ************ams-vol************ estaremos guardando todo el filesystem que se encuentre debajo de `/var/lib/postgresql/data` un éxito 🍾
+Esto quiere decir que en el volumen ************ams-vol************ estaremos guardando todo el filesystem que se encuentre debajo de `/var/lib/postgresql/data`. Para verificar esto deben volver a crear la tabla test, finalizar el contenedor de Postgres y volver a inicializarlo. Confirmar que la tabla sigue creada. 
 
-Volver a crear la tabla test, finalizar el contenedor de portgres y volver a inicializarlo. Conformar que la tabla sigue creada. 
+Ahora pueden instalar el cliente de Postgres en el ubuntu:
 
-Ahora pueden instalar el cliente de postgres en el ubuntu:
-
-```bash
+```docker
 sudo apt-get install -y postgresql-client
 ```
 
-Desde ubuntu conectarse al postgres y confirmar que la tabla test creada anteriormente sigue estando ahí.
+Desde ubuntu conectarse al Postgres, a través del cliente, y confirmar que la tabla test creada anteriormente sigue estando ahí. 
 
-Parar el contenedor de la base de datos y ejecutarlo de nuevo com:
+- [ ]  Eliminar todo port forwarding de puertos de la VM. De esta forma todo lo que esté dentro de la VM será inaccesible. Unicamente puede existir forwarding en el puerto 22 para conectarse via SSH.
 
-```bash
+Paramos el contenedor de Postgres, lo eliminamos y vamos crear uno nuevo que se conecte a una **network,** ejecutando el siguiente comando:
+
+```docker
+docker network create internal
+
 docker run --name ams -v ams-vol:/var/lib/postgresql/data \
 						-p 5432:5432 \
 						-e POSTGRES_PASSWORD=password \
@@ -161,9 +169,9 @@ docker run --name ams -v ams-vol:/var/lib/postgresql/data \
 						-d postgres:14.1-alpine
 ```
 
-Vamos a crear además otro contenedor con un portgres manager y dos interfaces, una mistando hacia externa (pública) y otra interna y compartida con la base de datos. 
+Vamos a crear además otro contenedor con un **Postgres Manager** y **dos interfaces**, una externa (pública) y otra interna y compartida con la base de datos. 
 
-```bash
+```docker
 docker run -d --rm \
 		-e PGADMIN_DEFAULT_EMAIL=user@itba.edu \
 		-e PGADMIN_DEFAULT_PASSWORD=p4ssw0rd \
@@ -180,8 +188,28 @@ Conectándose al puerto 8088 con el navegador de su PC (no desde el ubuntu) pued
 - ¿Pueden salir desde la base de datos a Internet?
 - ¿Como es la tabla de ruteo de la base de datos?
 
-## Netflix + Microservicios 🔎
+Lo próximo que vamos a hacer es, aprovechando la base de datos, levantar una imagen de **Drupal**:
 
-Les dejo una interesante charla que Josh Evans dio y cuenta como Netflix, encontró monolitos no tan aparentes dentro de sus estructuras de comunicación y servicios y cómo los fueron diversificando hasta lograr masterizar los microservicios: 
+- [ ]  Crear una nueva base de datos llamada **Drupal** en la instancia de Postgres previamente levantada (ams).
+- [ ]  Instalar una extensión necesaria ingersando a la consola de la instancia, `psql -c "CREATE EXTENSION pg_trgm" drupal postgres`
+- [ ]  Drupal debe ser accesible desde el puerto 8081 de la máquina host.
 
-[https://www.youtube.com/watch?v=CZ3wIuvmHeM&ab_channel=InfoQ](https://www.youtube.com/watch?v=CZ3wIuvmHeM&ab_channel=InfoQ)
+```docker
+docker run -d --rm --name drp drupal
+```
+
+Suponiendo que tenemos un exitoso sitio, para mejorar la experiencia de usuario, debemos levantar otra instancia, ante la misma base de datos.
+
+- [ ]  Debe ser accesible desde el puerto 8082 de la máquina host.
+- [ ]  Investigar si es posible agilizar la configuración de la instancia, es decir que se compartan configuraciones, modulos, perfiles, etc. Implementar.
+- [ ]  Investigar alternativas de como unificar todos los comandos de docker en un único archivo, implementar esta misma arquitectura en dicho archivo e implementarlo. Es requerido que solo deba ejecutarse ********************************un único comando******************************** para instanciar todo lo necesario.
+
+Supongamos que para evitar colapsar las instancias de los servicios se requiere que el 50% del tráfico acceda a la instancia 1 (:8081) y el restante 50% al otro (:8082). Teniendo en cuenta que una política a implementar podría ser ************************round-robin.************************
+
+¿Como debería modificar la arquitectura para que esto sea efectivo?
+
+<aside>
+🗞️ **Netflix + Microservicios** 
+Les dejo una interesante charla que Josh Evans dio y cuenta como Netflix, encontró monolitos no tan aparentes dentro de sus estructuras de comunicación y servicios y cómo los fueron diversificando hasta lograr masterizar los microservicios: [https://www.youtube.com/watch?v=CZ3wIuvmHeM&ab_channel=InfoQ](https://www.youtube.com/watch?v=CZ3wIuvmHeM&ab_channel=InfoQ)
+
+</aside>
