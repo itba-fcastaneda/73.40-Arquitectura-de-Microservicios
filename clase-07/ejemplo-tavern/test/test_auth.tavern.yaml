@@ -1,0 +1,50 @@
+test_name: Make sure server saves and returns a number correctly
+
+stages:
+  - name: login
+    request:
+      url: http://localhost:5000/login
+      json:
+        user: test-user
+        password: wrong-password
+      method: POST
+      headers:
+        content-type: application/json
+    response:
+      status_code: 401
+      json:
+        error: "Incorrect username/password"
+      headers:
+        content-type: application/json
+
+  - name: numbers without login
+    request:
+      url: http://localhost:5000/numbers
+      json:
+        name: smallnumber
+        number: 123
+      method: POST
+      headers:
+        content-type: application/json
+    response:
+      status_code: 401
+      json:
+        error: "No token"
+      headers:
+        content-type: application/json
+
+
+  - name: Make sure its in the db
+    request:
+      url: http://localhost:5000/numbers
+      params:
+        name: smallnumber
+      method: GET
+      headers:
+        content-type: application/json
+    response:
+      status_code: 401
+      json:
+        error: "No token"
+      headers:
+        content-type: application/json

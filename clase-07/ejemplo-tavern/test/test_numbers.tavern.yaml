@@ -1,0 +1,61 @@
+test_name: Make sure server saves and returns a number correctly
+
+stages:
+  - name: login
+    request:
+      url: http://localhost:5000/login
+      json:
+        user: test-user
+        password: correct-password
+      method: POST
+      headers:
+        content-type: application/json
+    response:
+      status_code: 200
+      verify_response_with:
+        function: tavern.helpers:validate_jwt
+        extra_kwargs:
+          jwt_key: "token"
+          key: CGQgaG7GYvTcpaQZqosLy4
+          algorithms: ["HS256"]
+          options:
+            verify_signature: true
+            verify_aud: false
+      headers:
+        content-type: application/json
+      save:
+        json:
+          test_login_token: token
+
+  - name: post a number
+    request:
+      url: http://localhost:5000/numbers
+      json:
+        name: smallnumber
+        number: 123
+      method: POST
+      headers:
+        content-type: application/json
+        Authorization: "bearer {test_login_token:s}"
+    response:
+      status_code: 201
+      json:
+        {}
+      headers:
+        content-type: application/json
+
+  - name: Make sure its in the db
+    request:
+      url: http://localhost:5000/numbers
+      params:
+        name: smallnumber
+      method: GET
+      headers:
+        content-type: application/json
+        Authorization: "bearer {test_login_token:s}"
+    response:
+      status_code: 200
+      json:
+        number: 123
+      headers:
+        content-type: application/json

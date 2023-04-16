@@ -1,0 +1,6 @@
+env
+Dockerfile
+Dockerfile.prod
+.coverage
+.pytest_cache
+htmlcov
