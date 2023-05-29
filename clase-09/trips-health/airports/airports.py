@@ -18,6 +18,10 @@ class AirportsService:
 
 
     @rpc
+    def ping(self):
+        return "Pong!"
+
+    @rpc
     def get(self, airport_id):
         airport = self.redis.get(airport_id)
         return airport

@@ -1,16 +1,17 @@
-FROM python:3
+FROM python:3.11
 
-RUN apt-get update && apt-get -y install netcat && apt-get clean
+RUN groupadd -g 999 python \
+    && useradd -r -u 999 -g python python \
+    && mkdir -p /usr/app \
+    && chown python:python /usr/app
 
-WORKDIR /app
+WORKDIR /usr/app
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY --chown=python:python requirements.txt requirements.txt
+RUN pip install -r requirements.txt
 
-COPY config.yml ./
-COPY run.sh ./
-COPY airports.py ./
+COPY --chown=python:python . .
 
-RUN chmod +x ./run.sh
+USER 999
 
-CMD ["./run.sh"]
+CMD ["nameko", "run", "--config", "config.yml", "airports"]

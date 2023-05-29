@@ -4,6 +4,8 @@ import time
 from nameko.rpc import rpc
 from nameko_redis import Redis
 from nameko.web.handlers import http
+from nameko_tracer import Tracer
+from nameko_structlog import StructlogDependency
 
 HEALTH_CHECK_PERIOD = 60 # in seconds
 
@@ -12,9 +14,21 @@ class TripsService:
 
     redis = Redis('development')
 
+    tracer = Tracer()
+    log = StructlogDependency()
+
     def __init__(self):
         self.health_check_func = {}
         self.health_check_time = int( time.time() )
+
+    @rpc
+    def ping(self):
+        self.log.info(message=f"Your name is {self.name}", type="greeting")
+        return "Pong!"
+
+    @rpc
+    def bum(self):
+        raise Exception("Trip trip BUM")
 
     @rpc
     def get(self, trip_id):

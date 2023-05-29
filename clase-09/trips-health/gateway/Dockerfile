@@ -1,16 +1,25 @@
-FROM python:3
+FROM python:3.11
 
-RUN apt-get update && apt-get -y install netcat && apt-get clean
+LABEL maintainer="isagues@itba.edu.ar"
 
-WORKDIR /app
+RUN groupadd -g 999 python \
+    && useradd -r -u 999 -g python python \
+    && mkdir -p /usr/app \
+    && python -m venv /usr/app/.venv \
+    && chown -R python:python /usr/app 
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+ENV PATH="/usr/app/.venv/bin:$PATH"
+ENV PIP_NO_CACHE_DIR=off
+WORKDIR /usr/app
+USER 999
 
-COPY config.yml ./
-COPY run.sh ./
-COPY gateway.py ./
+COPY --chown=python:python requirements.txt requirements.txt
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
 
-RUN chmod +x ./run.sh
+COPY --chown=python:python . .
 
-CMD ["./run.sh"]
+EXPOSE 8000
+HEALTHCHECK CMD curl -f http://localhost:8000/ping || exit 1
+
+CMD ["nameko", "run", "--config", "config.yml", "gateway"]

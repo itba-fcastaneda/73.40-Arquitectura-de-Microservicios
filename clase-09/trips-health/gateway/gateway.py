@@ -5,6 +5,8 @@ import requests
 
 from nameko.rpc import RpcProxy
 from nameko.web.handlers import http
+from nameko_tracer import Tracer
+from nameko_structlog import StructlogDependency
 
 HEALTH_CHECK_PERIOD = 60 # in seconds
 
@@ -31,10 +33,38 @@ class GatewayService:
 
     airports_rpc = RpcProxy('airports_service')
     trips_rpc = RpcProxy('trips_service')
+
+    tracer = Tracer()
+    log = StructlogDependency()
+
     health_check_func = {
         'trips': check_trips,
         'gateways': check_airports
     }
+
+    @http('GET', '/bum')
+    def bum(self, request):
+        raise Exception("bang!")
+
+    @http('GET', '/trip-bum')
+    def trip_bum(self, request):
+        ans = self.trips_rpc.bum()
+        return json.dumps({'Trip': ans})
+
+    @http('GET', '/ping')
+    def ping(self, request):
+        self.log.info(message=f"Your name is {self.name}", type="greeting")
+        return "Pong!"
+
+    @http('GET', '/airport-ping')
+    def airport_ping(self, request):
+        ans = self.airports_rpc.ping()
+        return json.dumps({'Airport': ans})
+
+    @http('GET', '/trip-ping')
+    def trip_ping(self, request):
+        ans = self.trips_rpc.ping()
+        return json.dumps({'Trip': ans})
 
     @http('GET', '/airport/<string:airport_id>')
     def get_airport(self, request, airport_id):
@@ -69,7 +99,6 @@ class GatewayService:
             func_status_ok , func_message = check(self)
             message.append( f'    {k} status: {"OK" if func_status_ok else "Error. "+func_message}' )
             healthy &= func_status_ok
-
         message.insert(0, f"{self.name} status: {'OK' if healthy else 'Error'}\nDependencies:")
         message.append(f'Last update: {time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.gmtime() )}')
 
