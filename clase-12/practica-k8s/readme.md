@@ -1,5 +1,6 @@
+# Práctica Kubernetes
 
-## Instalar kubectl
+## Instalar kubectl
 
 Kubectl es una interfaz de línea de comandos para ejecutar comandos sobre despliegues clusterizados de Kubernetes. Esta interfaz es la manera estándar de comunicación con el clúster ya que permite realizar todo tipo de operaciones sobre el mismo.
 
@@ -13,7 +14,7 @@ sudo apt-get install -y kubectl
 
 Si desean pueden definir algunos alias en el shell para acceder a kubectl. Vean el [link](https://raw.githubusercontent.com/ahmetb/kubectl-aliases/master/.kubectl_aliases)
 
-## Instalar minikube
+## Instalar minikube
 
 
 Para AMD64
@@ -28,7 +29,7 @@ curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-
 sudo install minikube-linux-arm64 /usr/local/bin/minikube
 ```
 
-## Iniciar el cluster
+## Iniciar el cluster
 
 ```bash
 minikube start
