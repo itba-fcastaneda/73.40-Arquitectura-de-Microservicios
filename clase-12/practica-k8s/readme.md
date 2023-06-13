@@ -126,7 +126,7 @@ Las credenciales de autenticación están basadas en certificados digitales.
 Pueden conectarse directamente a la API con curl:
 
 ``` bash
-curl https://192.168.49.2:8443/version --cert /home/fede/.minikube/profiles/minikube/client.crt --key  /home/fede/.minikube/profiles/minikube/client.key --cacert ~/.minikube/ca.crt
+curl https://192.168.49.2:8443/version --cert ~/.minikube/profiles/minikube/client.crt --key  ~/.minikube/profiles/minikube/client.key --cacert ~/.minikube/ca.crt
 ```
 
 Y verán:
