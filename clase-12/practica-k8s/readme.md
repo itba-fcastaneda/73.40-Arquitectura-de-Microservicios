@@ -1,5 +1,6 @@
+# Práctica Kubernetes
 
-## Instalar kubectl
+## Instalar kubectl
 
 Kubectl es una interfaz de línea de comandos para ejecutar comandos sobre despliegues clusterizados de Kubernetes. Esta interfaz es la manera estándar de comunicación con el clúster ya que permite realizar todo tipo de operaciones sobre el mismo.
 
@@ -13,7 +14,7 @@ sudo apt-get install -y kubectl
 
 Si desean pueden definir algunos alias en el shell para acceder a kubectl. Vean el [link](https://raw.githubusercontent.com/ahmetb/kubectl-aliases/master/.kubectl_aliases)
 
-## Instalar minikube
+## Instalar minikube
 
 
 Para AMD64
@@ -28,7 +29,7 @@ curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-
 sudo install minikube-linux-arm64 /usr/local/bin/minikube
 ```
 
-## Iniciar el cluster
+## Iniciar el cluster
 
 ```bash
 minikube start
@@ -125,7 +126,7 @@ Las credenciales de autenticación están basadas en certificados digitales.
 Pueden conectarse directamente a la API con curl:
 
 ``` bash
-curl https://192.168.49.2:8443/version --cert /home/fede/.minikube/profiles/minikube/client.crt --key  /home/fede/.minikube/profiles/minikube/client.key --cacert ~/.minikube/ca.crt
+curl https://192.168.49.2:8443/version --cert ~/.minikube/profiles/minikube/client.crt --key  ~/.minikube/profiles/minikube/client.key --cacert ~/.minikube/ca.crt
 ```
 
 Y verán:
@@ -144,7 +145,7 @@ Y verán:
 }
 ```
 
-Que es la misma información qeu vemos con el kubectl
+Que es la misma información que vemos con el kubectl
 
 ``` bash
 fede@lincon:~$ kubectl version
@@ -156,7 +157,7 @@ Server Version: version.Info{Major:"1", Minor:"26", GitVersion:"v1.26.3", GitCom
 
 ### APIs
 
-Si queremos ver todas las APIs que están ahbilitadas en un cluter podemos ejecutar 
+Si queremos ver todas las APIs que están habilitadas en un cluter podemos ejecutar 
 
 ```bash
 fede@lincon:~$ kubectl api-versions
@@ -199,7 +200,7 @@ statefulsets            sts          apps/v1              true         StatefulS
 
 ### Apply & Diff
 
-Creen un archivo y nombrenlo `simple-pod.yml`. Agreguen el siguiente contenido:
+Creen un archivo y nombrenlo `simple-pod.yaml`. Agreguen el siguiente contenido:
 
 ```yaml
 apiVersion: v1
@@ -214,7 +215,7 @@ spec:
     - containerPort: 80
 ```
 
-Pueden aplicar los cambios en la API con `kubectl apply -f simple-pod.yml`. Deberían ver el siguiente output:
+Pueden aplicar los cambios en la API con `kubectl apply -f simple-pod.yaml`. Deberían ver el siguiente output:
 
 ```bash
 fede@lincon:~$ kubectl apply -f simple-pod.yaml
@@ -238,7 +239,7 @@ spec:
     - containerPort: 80
 ```
 
-Pueden ver la diferencia entre el nuevo manifiesto y lo que está aplicado con un `kubectl diff`. 
+Pueden ver la diferencia entre el nuevo manifiesto y lo que está aplicado con un `kubectl diff -f simple-pod.yaml`. 
 
 ```bash
 fede@lincon:~$ kubectl diff -f simple-pod.yaml
@@ -343,6 +344,7 @@ Además, el ReplicaSet permite escalar vertical u horizontalmente la cantidad de
 
 Configurar y desplegar este replica set:
 
+`simple-rs.yaml`
 ``` yaml
 apiVersion: apps/v1
 kind: ReplicaSet
@@ -374,7 +376,7 @@ Se puede ver la definicón del criterio de adopción de Pods está definido por 
       role: web
 ```
 
-Si vemos los Pods creados: 
+Aplicamos el manifiesto `kubectl apply -f simple-rs.yaml` y vemos los Pods creados: 
 
 ``` bash
 fede@lincon:~$ kubectl get rs
@@ -425,7 +427,7 @@ kubectl get pods web-vtl5s -o yaml | grep -A 5 owner
 
 Vamos a crear un pod manulamente:
 
-pod_orphan.yaml
+`pod_orphan.yaml`
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -452,7 +454,7 @@ web-vtl5s   1/1     Running       0          14m
 
 En cambio, si el pod estuviera corriendo antes de inicial el replica set, es adoptado y agregado a la lista de los pods controlados.
 
-Creamos el Pod y confirmamos que está corriendo. Vemos que no tiene `owner`
+Borramos el ReplicaSet `kubectl delete rs web`, creamos el Pod y confirmamos que está corriendo. Vemos que no tiene `owner`
 ```bash
 fede@lincon:~$ kubectl apply -f pod_orphan.yaml
 pod/orphan created
@@ -469,7 +471,7 @@ fede@lincon:~$
 Creamos el ReplicaSet y luegos de unos segundo vemos que el pod fue adoptado:
 
 ```bash
-fede@lincon:~$ kubectl apply -f replicaset.yaml
+fede@lincon:~$ kubectl apply -f simple-rs.yaml
 replicaset.apps/web created
 fede@lincon:~$ kubectl get rs
 NAME   DESIRED   CURRENT   READY   AGE
@@ -523,7 +525,7 @@ Cuando se crea un deployment, Kubernetes se encarga de crear y gestionar los rec
 
 Una vez que se ha creado un deployment, Kubernetes garantiza que la cantidad especificada de réplicas esté siempre en funcionamiento. En caso de que una réplica falle o se deteriore, Kubernetes automáticamente creará una nueva réplica para reemplazarla y mantener la disponibilidad de la aplicación.
 
-Vamos a definir un deployment en el archivo `deployment.yml`.
+Vamos a definir un deployment en el archivo `deployment.yaml`.
 
 ```yaml                                                                                                28,20         All
 apiVersion: apps/v1
@@ -552,15 +554,15 @@ spec:
 A aplicarlo:
 
 ``` bash
-fede@lincon:~$ ka deployment.yml
+fede@lincon:~$  kubectl apply -f deployment.yaml
 deployment.apps/nginx created
-fede@lincon:~$ kg deploy
+fede@lincon:~$ kubectl get deploy
 NAME    READY   UP-TO-DATE   AVAILABLE   AGE
 nginx   3/3     3            3           4s
-fede@lincon:~$ kg rs
+fede@lincon:~$ kubectl get rs
 NAME               DESIRED   CURRENT   READY   AGE
 nginx-85996f8dbd   3         3         3       11s
-fede@lincon:~$ kg pods
+fede@lincon:~$ kubectl get pods
 NAME                     READY   STATUS    RESTARTS   AGE
 nginx-85996f8dbd-2dqss   1/1     Running   0          14s
 nginx-85996f8dbd-8w2v4   1/1     Running   0          14s
@@ -573,7 +575,7 @@ Podemos cambiar la cantidad de pods en el deployment cambiando el scale
 ``` bash
 fede@lincon:~$ kubectl scale deploy nginx --replicas=2
 deployment.apps/nginx scaled
-fede@lincon:~$ kg pods
+fede@lincon:~$ kubectl get pods
 NAME                     READY   STATUS    RESTARTS   AGE
 nginx-85996f8dbd-8w2v4   1/1     Running   0          117s
 nginx-85996f8dbd-d8gmv   1/1     Running   0          117s
@@ -587,12 +589,12 @@ kd pod nginx-85996f8dbd-qtpvv  | grep Image
     Image ID:       docker-pullable://nginx@sha256:f7988fb6c02e0ce69257d9bd9cf37ae20a60f1df7563c3a2a6abe24160306b8d
 ```
 
-La ventaja del Deployment sobre el ReplicaSet es la capacidad de hacer cambios en el despligue de la plaicación sin afectar el servicio. Por ejemplo: podemos actualzar la versión de de la imagen del Deployment y en forma prograsiva se irá actualizando cada uno de los pods. 
+La ventaja del Deployment sobre el ReplicaSet es la capacidad de hacer cambios en el despligue de la aplicación sin afectar el servicio. Por ejemplo: podemos actualizar la versión de de la imagen del Deployment y en forma prograsiva se irá actualizando cada uno de los pods. 
 
 ``` bash
 fede@lincon:~$ kubectl set image  deploy/nginx nginx=nginx:1.24.0
 deployment.apps/nginx image updated
-fede@lincon:~$ kg pods
+fede@lincon:~$ kubectl get pods
 NAME                     READY   STATUS              RESTARTS   AGE
 nginx-7f68795f75-bq6wr   0/1     Terminating         0          83s
 nginx-85996f8dbd-8w2v4   1/1     Running             0          12m
@@ -603,7 +605,7 @@ nginx-b55dcc56f-7qcf8    0/1     ContainerCreating   0          2s
 nginx-b55dcc56f-dnjkw    0/1     ContainerCreating   0          2s
 nginx-b55dcc56f-wtfv4    0/1     ContainerCreating   0          2s
 
-fede@lincon:~$ kg pods
+fede@lincon:~$ kubectl get pods
 NAME                     READY   STATUS              RESTARTS   AGE
 nginx-85996f8dbd-8w2v4   1/1     Running             0          12m
 nginx-b55dcc56f-7qcf8    0/1     ContainerCreating   0          8s
@@ -612,14 +614,14 @@ nginx-b55dcc56f-dnjkw    1/1     Running             0          8s
 nginx-b55dcc56f-jbttc    1/1     Running             0          5s
 nginx-b55dcc56f-wtfv4    1/1     Running             0          8s
 
-fede@lincon:~$ kg pods
+fede@lincon:~$ kubectl get pods
 NAME                    READY   STATUS    RESTARTS   AGE
 nginx-b55dcc56f-7qcf8   1/1     Running   0          12s
 nginx-b55dcc56f-b2h94   1/1     Running   0          7s
 nginx-b55dcc56f-dnjkw   1/1     Running   0          12s
 nginx-b55dcc56f-jbttc   1/1     Running   0          9s
 nginx-b55dcc56f-wtfv4   1/1     Running   0          12s
-fede@lincon:~$ kd pod nginx-b55dcc56f-wtfv4  | grep Image
+fede@lincon:~$ kubectl describe pod nginx-b55dcc56f-wtfv4  | grep Image
     Image:          nginx:1.24.0
     Image ID:       docker-pullable://nginx@sha256:f3a9f1641ace4691afed070aadd1115f0e0c4ab4b2c1c447bf938619176c3eec
 ```
@@ -629,7 +631,7 @@ En forma progresive se fueron actualizando los Pods, y sólo al tener el pod nue
 ``` bash
 fede@lincon:~$ kubectl set image  deploy/nginx nginx=nginx:9.9.9
 deployment.apps/nginx image updated
-fede@lincon:~$ kg pods
+fede@lincon:~$ kubectl get pods
 NAME                     READY   STATUS              RESTARTS   AGE
 nginx-6776ff65cc-b4t5b   0/1     ContainerCreating   0          3s
 nginx-6776ff65cc-gwbcl   0/1     ContainerCreating   0          3s
@@ -638,7 +640,7 @@ nginx-b55dcc56f-7qcf8    1/1     Running             0          2m41s
 nginx-b55dcc56f-b2h94    1/1     Running             0          2m36s
 nginx-b55dcc56f-jbttc    1/1     Running             0          2m38s
 nginx-b55dcc56f-wtfv4    1/1     Running             0          2m41s
-fede@lincon:~$ kg pods
+fede@lincon:~$ kubectl get pods
 NAME                     READY   STATUS              RESTARTS   AGE
 nginx-6776ff65cc-b4t5b   0/1     ErrImagePull        0          7s
 nginx-6776ff65cc-gwbcl   0/1     ContainerCreating   0          7s
@@ -654,7 +656,7 @@ Los pods viejos no se destruyen hasta que los nuevos no está operativos, asegur
 Supongamos que tenemos un deployment estable:
 
 ``` bash
-fede@lincon:~$ kg pods
+fede@lincon:~$ kubectl get pods
 NAME                    READY   STATUS    RESTARTS   AGE
 nginx-b55dcc56f-2bbbw   1/1     Running   0          28m
 nginx-b55dcc56f-7qcf8   1/1     Running   0          28m
@@ -668,7 +670,7 @@ Al hacer un cambio no deseado o que detectamos que no está funcionando correcta
 ``` bash
 fede@lincon:~$ kubectl set image  deploy/nginx nginx=nginx:9.9.9
 deployment.apps/nginx image updated
-fede@lincon:~$ kg pods
+fede@lincon:~$ kubectl get pods
 NAME                     READY   STATUS             RESTARTS   AGE
 nginx-6776ff65cc-8d7pm   0/1     ErrImagePull       0          18s
 nginx-6776ff65cc-nmrzr   0/1     ErrImagePull       0          18s
@@ -680,7 +682,7 @@ nginx-b55dcc56f-wtfv4    1/1     Running            0          29m
 
 fede@lincon:~$ kubectl rollout undo deployments/nginx
 deployment.apps/nginx rolled back
-fede@lincon:~$ kg pods
+fede@lincon:~$ kubectl get pods
 NAME                    READY   STATUS    RESTARTS   AGE
 nginx-b55dcc56f-7qcf8   1/1     Running   0          29m
 nginx-b55dcc56f-b2h94   1/1     Running   0          29m
@@ -734,9 +736,9 @@ spec:
 Deplegamos y confirmamos que hay uno desplegado por nodo:
 
 ```bash
-fede@lincon:~$ ka deamonset.yaml
+fede@lincon:~$ kubectl apply -f deamonset.yaml
 daemonset.apps/logger created
-fede@lincon:~$ kg pods -o wide
+fede@lincon:~$ kubectl get pods -o wide
 NAME           READY   STATUS    RESTARTS   AGE   IP            NODE       NOMINATED NODE   READINESS GATES
 logger-bnxwc   1/1     Running   0          12m   10.244.0.70   minikube   <none>           <none>
 ```
@@ -744,8 +746,7 @@ logger-bnxwc   1/1     Running   0          12m   10.244.0.70   minikube   <none
 De ahí podemos saltar dentro del pod y ver los logs del nodo.
 
 ```bash
-fede@lincon:~$ kex logger-bnxwc -- sh
-/ # ls /var/log/pods/
+fede@lincon:~$ kubectl exec -it logger-8l7wz -- ls /var/log/pods/
 default_logger-bnxwc_965f0ad2-f1b5-45c3-a43f-9008666dbd46
 default_nginx-b55dcc56f-fg8w2_1cf46795-d98c-4c5f-b2a1-3fdd36a1a183
 default_nginx-b55dcc56f-wtfv4_eda35a99-4868-4f15-bcc9-de4ab7b30916
@@ -765,7 +766,6 @@ kube-system_kube-scheduler-minikube_0818f4b1a57de9c3f9c82667e7fcc870
 kube-system_storage-provisioner_ba75e191-29a6-4f6d-b1ce-f007c4eb28f2
 kubernetes-dashboard_dashboard-metrics-scraper-5c6664855-psplc_a5ed6ff1-60db-4210-97ae-1b3d28afda0a
 kubernetes-dashboard_kubernetes-dashboard-55c4cbbc7c-fw9xq_577b8f49-3f79-4508-85fa-66400b432ee7
-/ # exit
 ```
 
 En resumen, un DaemonSet en Kubernetes es un controlador que garantiza la presencia de un pod en todos los nodos del clúster, lo que permite ejecutar tareas específicas en cada uno de ellos de manera automatizada.
@@ -787,7 +787,7 @@ mkdir -p /tmp/minikube/pv1
 ```
 
 
-Creamos el archivo pv.yaml:
+Creamos el archivo `pv.yaml`
 ```yaml
 apiVersion: v1
 kind: PersistentVolume
@@ -816,16 +816,16 @@ spec:
 Declarándolo y viendo su creación:
 
 ``` bash
-fede@lincon:~$ ka pv.yaml
+fede@lincon:~$ kubectl apply -f pv.yaml
 persistentvolume/minikube-pv created
-fede@lincon:~$ kg pv
+fede@lincon:~$ kubectl get pv
 NAME          CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS    REASON   AGE
 minikube-pv   1Gi        RWO            Delete           Available           local-storage            8s
 ```
 
 Cuando un PersistentVolumeClaim se realiza, Kubernetes encuentra un PersistentVolume disponible que cumpla con los requisitos y lo enlaza al PVC. A continuación, el PVC se puede montar en los pods que lo soliciten, proporcionándoles almacenamiento persistente. Esto permite que los datos se conserven incluso si los pods se eliminan o reinician.
 
-Creamos el archivo stateful.yaml
+Creamos el archivo `stateful.yaml`
 ```yaml
 apiVersion: apps/v1
 kind: StatefulSet
@@ -865,13 +865,13 @@ spec:
 Aplicando este último archivo:
 
 ``` bash
-fede@lincon:~$ ka stateful.yaml
+fede@lincon:~$ kubectl apply -f stateful.yaml
 statefulset.apps/web configured
-fede@lincon:~$ kg pods
+fede@lincon:~$ kubectl get pods
 NAME    READY   STATUS    RESTARTS   AGE
 web-0   1/1     Running   0          3s
 web-1   0/1     Pending   0          2s
-fede@lincon:~$ kg pvc
+fede@lincon:~$ kubectl get pvc
 NAME        STATUS    VOLUME        CAPACITY   ACCESS MODES   STORAGECLASS    AGE
 www-web-0   Bound     minikube-pv   1Gi        RWO            local-storage   4m55s
 www-web-1   Pending                                           local-storage   17s
@@ -879,9 +879,9 @@ www-web-1   Pending                                           local-storage   17
 
 Se puede ver que uno de los PVC logró hacer binding con el PV pero el otro no encontró candidato, y por lo tanto el pod no pueden ser creado, ya que su dependencia no está disponible.
 
-## Helm
+## Helm
 
-Para instalar help en linux: [Fuente](https://helm.sh/docs/intro/install/)
+Para instalar helm en linux: [Fuente](https://helm.sh/docs/intro/install/)
 
 
 ``` bash
