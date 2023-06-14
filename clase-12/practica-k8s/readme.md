@@ -892,3 +892,124 @@ sudo apt-get update
 sudo apt-get install helm
 ```
 
+Una vez instalado, vamos a instalar un chart desarrollado por un tercero, Bitnami en este caso. Instalamos el repositorio de Bitnami:
+
+``` bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+```
+
+Y ahora a instalar un chart. Para eso vamos a crear un namespace nuevo y confirmar si creación.
+
+```bash
+fede@lincon:~$ k create ns metrics
+namespace/metrics created
+fede@lincon:~$ kg ns
+NAME                   STATUS   AGE
+default                Active   10d
+fede-ns                Active   8d
+kube-node-lease        Active   10d
+kube-public            Active   10d
+kube-system            Active   10d
+kubernetes-dashboard   Active   10d
+metrics                Active   7s
+```
+
+Con el namespace creado, desplegamos el chart:
+
+```bash
+fede@lincon:~$ helm install kube-state-metrics bitnami/kube-state-metrics -n metrics
+NAME: kube-state-metrics
+LAST DEPLOYED: Mon Jun 12 18:05:20 2023
+NAMESPACE: metrics
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+CHART NAME: kube-state-metrics
+CHART VERSION: 3.5.4
+APP VERSION: 2.9.2
+
+** Please be patient while the chart is being deployed **
+
+Watch the kube-state-metrics Deployment status using the command:
+
+    kubectl get deploy -w --namespace metrics kube-state-metrics
+
+kube-state-metrics can be accessed via port "8080" on the following DNS name from within your cluster:
+
+    kube-state-metrics.metrics.svc.cluster.local
+
+To access kube-state-metrics from outside the cluster execute the following commands:
+
+    echo "URL: http://127.0.0.1:9100/"
+    kubectl port-forward --namespace metrics svc/kube-state-metrics 9100:8080
+```
+
+Conectándose al puerto 9100 podemos ver todas las métricas generadas.
+
+Y con los siguientes comandos podemos inspeccionar los objetos desplegados:
+
+``` bash
+fede@lincon:~$ kg all -n metrics
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/kube-state-metrics-769d5c456-7bpmw   1/1     Running   0          18m
+
+NAME                         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/kube-state-metrics   ClusterIP   10.107.94.210   <none>        8080/TCP   18m
+
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/kube-state-metrics   1/1     1            1           18m
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/kube-state-metrics-769d5c456   1         1         1       18m
+```
+
+También podemos explorar el chart y sus definiciones: 
+
+``` bash
+fede@lincon:~$ helm show chart bitnami/kube-state-metrics
+annotations:
+  category: Analytics
+  licenses: Apache-2.0
+apiVersion: v2
+appVersion: 2.9.2
+dependencies:
+- name: common
+  repository: oci://registry-1.docker.io/bitnamicharts
+  tags:
+  - bitnami-common
+  version: 2.x.x
+description: kube-state-metrics is a simple service that listens to the Kubernetes
+  API server and generates metrics about the state of the objects.
+home: https://bitnami.com
+icon: https://bitnami.com/assets/stacks/kube-state-metrics/img/kube-state-metrics-stack-220x234.png
+keywords:
+- prometheus
+- kube-state-metrics
+- monitoring
+maintainers:
+- name: VMware, Inc.
+  url: https://github.com/bitnami/charts
+name: kube-state-metrics
+sources:
+- https://github.com/bitnami/charts/tree/main/bitnami/kube-state-metrics
+version: 3.5.4
+```
+
+Para ver los valores de configuración usados en el despliegue, se puede hacer: 
+
+``` bash
+fede@lincon:~$ helm show values bitnami/kube-state-metrics > values.yaml
+```
+
+El outout, almacenado en values.yaml, corresponde a todos los valores configurables dentro del chart. Se pueden customizar y volver a aplicar. 
+
+Para ver la versión de char podemos hacer:
+
+```bash
+fede@lincon:~$ helm ls -n metrics
+NAME              	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART                   	APP VERSION
+kube-state-metrics	metrics  	1       	2023-06-12 18:05:20.165548026 +0000 UTC	deployed	kube-state-metrics-3.5.4	2.9.2
+```
+
+En mi output, el chart tiene una versión 3.5.4 y corresponde a la versión del chart, no del código de la aplicación. La aplicación, el código de la misma, corresponde al release 2.9.2.
