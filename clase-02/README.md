@@ -1,4 +1,4 @@
-# Arquitectura de Microservicios
+# Práctica 2 - Docker
 
 ## Entendiendo como Docker funciona por dentro
 

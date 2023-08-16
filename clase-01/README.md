@@ -1,6 +1,4 @@
-# Arquitectura de Microservicios - TP1
-
-## Entornos de desarrollo
+# Práctica 1 - Entornos de desarrollo
 
 Es probable que hayas experimentado la laboriosa tarea de preparar y mantener un entorno de desarrollo para un proyecto. Este proceso puede ser particularmente desafiante, dependiendo de la complejidad del proyecto en cuestión. Además, mantener dicho entorno en un estado óptimo puede ser complicado, especialmente **si se comparte la misma máquina con otros entornos de desarrollo**.
 
