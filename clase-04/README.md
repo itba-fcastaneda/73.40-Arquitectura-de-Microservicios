@@ -104,7 +104,7 @@ Lo primero que hay que realizar con un archivo docker compose es definir la vers
 
 ### Gateway: incorporación del servicio
 
-Respecto a los servicios, vamos a comenzar con el gateway. Para ello vamos a hacer uso del Dockerfile que acabamos de definir. EWn un archivo llamado `docker-compose.yml` vamos a escribir
+Respecto a los servicios, vamos a comenzar con el gateway. Para ello vamos a hacer uso del Dockerfile que acabamos de definir. En un archivo llamado `docker-compose.yml` vamos a escribir
 
 ```yaml
 version: "3.8"
