@@ -1,4 +1,6 @@
-# Consigna
+# Práctica 3 - Dockerfile
+
+## Objetivo
 
 El objetivo de la siguiente práctica es poner a prueba los conocimientos sobre como construir imágenes propias utilizando Dockerfiles y como orquestar múltiples contenedores utilizando docker compose. Para ello vamos a utilizar 3 aplicaciones implementadas en Python que implementan RPC a través de RabbitMQ y almacenan la información en Redis.
 
@@ -616,7 +618,3 @@ services:
     networks:
       - mq
 ```
-
-## FIN
-
-Espero que hayan podido seguir la guía sin problemas, cualquier inconveniente no duden en avisarnos para poder corregirlo.
