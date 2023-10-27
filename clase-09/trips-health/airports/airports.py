@@ -1,9 +1,11 @@
 import uuid
-import time 
+import time
 
 from nameko.rpc import rpc
 from nameko_redis import Redis
 from nameko.web.handlers import http
+from nameko_tracer import Tracer
+from nameko_structlog import StructlogDependency
 
 HEALTH_CHECK_PERIOD = 60 # in seconds
 
@@ -11,6 +13,9 @@ class AirportsService:
     name = "airports_service"
 
     redis = Redis('development')
+
+    tracer = Tracer()
+    log = StructlogDependency()
 
     def __init__(self):
         self.health_check_func = {}
